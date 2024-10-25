@@ -510,7 +510,7 @@ class MusicGenerationService(AIModelService):
             )
 
             if result:
-                bt.logging.info("Weights set on the chain successfully!")
+                bt.logging.info(f"Weights set on the chain successfully!{result}")
             else:
                 bt.logging.error(f"Failed to set weights: {msg}")
         except Exception as e:
