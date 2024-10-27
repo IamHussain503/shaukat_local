@@ -164,7 +164,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--pm2_name", default="SN16Miner", help="Name of the PM2 process."
+        "--pm2_name", default="validator", help="Name of the PM2 process."
     )
 
     flags, extra_args = parser.parse_known_args()
