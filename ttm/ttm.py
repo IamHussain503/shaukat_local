@@ -448,64 +448,64 @@ class MusicGenerationService(AIModelService):
         return filtered_uids #self.combinations
 
 
-def update_weights(self, scores):
-    """
-    Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners.
-    The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
-    """
-    # Convert scores to a PyTorch tensor and check for NaN values
-    weights = torch.tensor(scores)
-    if torch.isnan(weights).any():
-        bt.logging.warning(
-            "Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
-        )
+    def update_weights(self, scores):
+        """
+        Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners.
+        The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
+        """
+        # Convert scores to a PyTorch tensor and check for NaN values
+        weights = torch.tensor(scores)
+        if torch.isnan(weights).any():
+            bt.logging.warning(
+                "Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
+            )
 
-    # Normalize scores to get raw weights
-    raw_weights = torch.nn.functional.normalize(weights, p=1, dim=0)
-    bt.logging.info("raw_weights", raw_weights.tolist())  # Convert to list
+        # Normalize scores to get raw weights
+        raw_weights = torch.nn.functional.normalize(weights, p=1, dim=0)
+        bt.logging.info("raw_weights", raw_weights.tolist())  # Convert to list
 
-    # Convert uids to a PyTorch tensor
-    uids = torch.tensor(self.metagraph.uids)
-    bt.logging.info("raw_weight_uids", uids.tolist())  # Convert to list
+        # Convert uids to a PyTorch tensor
+        uids = torch.tensor(self.metagraph.uids)
+        bt.logging.info("raw_weight_uids", uids.tolist())  # Convert to list
 
-    try:
-        # Convert tensors to NumPy arrays for processing
-        uids_np = uids.numpy() if isinstance(uids, torch.Tensor) else uids
-        raw_weights_np = raw_weights.numpy() if isinstance(raw_weights, torch.Tensor) else raw_weights
+        try:
+            # Convert tensors to NumPy arrays for processing
+            uids_np = uids.numpy() if isinstance(uids, torch.Tensor) else uids
+            raw_weights_np = raw_weights.numpy() if isinstance(raw_weights, torch.Tensor) else raw_weights
 
-        # Process the raw weights and uids based on subnet limitations
-        (processed_weight_uids, processed_weights) = bt.utils.weight_utils.process_weights_for_netuid(
-            uids=uids_np,
-            weights=raw_weights_np,
-            netuid=self.config.netuid,
-            subtensor=self.subtensor,
-            metagraph=self.metagraph,
-        )
-        bt.logging.info("processed_weights", processed_weights.tolist())  # Convert to list
-        bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())  # Convert to list
-    except Exception as e:
-        bt.logging.error(f"An error occurred while processing weights within update_weights: {e}")
-        return
+            # Process the raw weights and uids based on subnet limitations
+            (processed_weight_uids, processed_weights) = bt.utils.weight_utils.process_weights_for_netuid(
+                uids=uids_np,
+                weights=raw_weights_np,
+                netuid=self.config.netuid,
+                subtensor=self.subtensor,
+                metagraph=self.metagraph,
+            )
+            bt.logging.info("processed_weights", processed_weights.tolist())  # Convert to list
+            bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())  # Convert to list
+        except Exception as e:
+            bt.logging.error(f"An error occurred while processing weights within update_weights: {e}")
+            return
 
-    # Convert processed weights and uids back to PyTorch tensors if needed
-    processed_weight_uids = torch.tensor(processed_weight_uids) if isinstance(processed_weight_uids, np.ndarray) else processed_weight_uids
-    processed_weights = torch.tensor(processed_weights) if isinstance(processed_weights, np.ndarray) else processed_weights
+        # Convert processed weights and uids back to PyTorch tensors if needed
+        processed_weight_uids = torch.tensor(processed_weight_uids) if isinstance(processed_weight_uids, np.ndarray) else processed_weight_uids
+        processed_weights = torch.tensor(processed_weights) if isinstance(processed_weights, np.ndarray) else processed_weights
 
-    # Set the weights on the Bittensor network
-    try:
-        result, msg = self.subtensor.set_weights(
-            wallet=self.wallet,
-            netuid=self.config.netuid,
-            uids=processed_weight_uids.cpu().numpy(),
-            weights=processed_weights.cpu().numpy(),
-            wait_for_finalization=False,
-            wait_for_inclusion=False,
-            version_key=self.version,
-        )
+        # Set the weights on the Bittensor network
+        try:
+            result, msg = self.subtensor.set_weights(
+                wallet=self.wallet,
+                netuid=self.config.netuid,
+                uids=processed_weight_uids.cpu().numpy(),
+                weights=processed_weights.cpu().numpy(),
+                wait_for_finalization=False,
+                wait_for_inclusion=False,
+                version_key=self.version,
+            )
 
-        if result:
-            bt.logging.info(f"Weights set on the chain successfully! {result}")
-        else:
-            bt.logging.error(f"Failed to set weights: {msg}")
-    except Exception as e:
-        bt.logging.error(f"An error occurred while setting weights: {e}")
+            if result:
+                bt.logging.info(f"Weights set on the chain successfully! {result}")
+            else:
+                bt.logging.error(f"Failed to set weights: {msg}")
+        except Exception as e:
+            bt.logging.error(f"An error occurred while setting weights: {e}")
