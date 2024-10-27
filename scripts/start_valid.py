@@ -123,7 +123,7 @@ def main(pm2_name: str, args: List[str]) -> None:
     if a new version is available. Update is performed as simple `git pull --rebase`.
     """
 
-    validator = start_validator_process(pm2_name, args)
+    validator = start_validator_process(pm2_name)
     current_version = latest_version = get_version()
     log.info("Current version: %s", current_version)
 
