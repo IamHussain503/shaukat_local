@@ -44,10 +44,10 @@ def get_version() -> str:
     return commit[:8]
 
 
-def start_validator_process(pm2_name: str) -> subprocess.Popen:
+def start_validator_process(pm2_name: str, args: List[str]) -> subprocess.Popen:
     """
     Spawn a new python process running neurons.validator.
-    `sys.executable` ensures thet the same python interpreter is used as the one
+    `sys.executable` ensures the same python interpreter is used as the one
     used to run this auto-updater.
     """
     assert sys.executable, "Failed to get python executable"
@@ -63,13 +63,14 @@ def start_validator_process(pm2_name: str) -> subprocess.Popen:
             "--",
             "-m",
             "neurons.validator",
-            *args,
+            *args,  # Added to include additional arguments
         ),
         cwd=ROOT_DIR,
     )
     process.pm2_name = pm2_name
 
     return process
+
 
 
 def stop_validator_process(process: subprocess.Popen) -> None:
