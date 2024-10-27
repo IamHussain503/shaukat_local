@@ -489,8 +489,8 @@ class MusicGenerationService(AIModelService):
             processed_weights = np.round(processed_weights, 3)
             
             # Log rounded values
-            bt.logging.info("processed_weights", processed_weights.tolist())
-            bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())
+            bt.logging.info("processed_weights....", processed_weights.tolist())
+            bt.logging.info("processed_weight_uids....", processed_weight_uids.tolist())
         except Exception as e:
             bt.logging.error(f"An error occurred while processing weights within update_weights: {e}")
             return
@@ -512,8 +512,8 @@ class MusicGenerationService(AIModelService):
             )
 
             if result:
-                bt.logging.info(f"Weights set on the chain successfully! {result}")
+                bt.logging.info(f"Weights set on the chain Successfully! {result}")
             else:
                 bt.logging.error(f"Failed to set weights: {msg}")
         except Exception as e:
-            bt.logging.error(f"An error occurred while setting weights: {e}")
+            bt.logging.error(f"An error occurred while Setting weights: {e}")
