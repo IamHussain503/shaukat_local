@@ -462,11 +462,11 @@ class MusicGenerationService(AIModelService):
 
         # Normalize scores to get raw weights
         raw_weights = torch.nn.functional.normalize(weights, p=1, dim=0)
-        bt.logging.info("raw_weights", raw_weights.tolist())  # Convert to list
+        bt.logging.info("raw_weights", np.round(raw_weights.tolist(), 3))  # Convert to list and round to 3 decimal places
 
         # Convert uids to a PyTorch tensor
         uids = torch.tensor(self.metagraph.uids)
-        bt.logging.info("raw_weight_uids", uids.tolist())  # Convert to list
+        bt.logging.info("raw_weight_uids", uids.tolist())
 
         try:
             # Convert tensors to NumPy arrays for processing
@@ -481,8 +481,13 @@ class MusicGenerationService(AIModelService):
                 subtensor=self.subtensor,
                 metagraph=self.metagraph,
             )
-            bt.logging.info("processed_weights", processed_weights.tolist())  # Convert to list
-            bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())  # Convert to list
+            
+            # Round processed weights to three decimal places
+            processed_weights = np.round(processed_weights, 3)
+            
+            # Log rounded values
+            bt.logging.info("processed_weights", processed_weights.tolist())
+            bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())
         except Exception as e:
             bt.logging.error(f"An error occurred while processing weights within update_weights: {e}")
             return
@@ -491,7 +496,7 @@ class MusicGenerationService(AIModelService):
         processed_weight_uids = torch.tensor(processed_weight_uids) if isinstance(processed_weight_uids, np.ndarray) else processed_weight_uids
         processed_weights = torch.tensor(processed_weights) if isinstance(processed_weights, np.ndarray) else processed_weights
 
-        # Set the weights on the Bittensor network
+        # Set the weights on the Bittensor network with rounded values
         try:
             result, msg = self.subtensor.set_weights(
                 wallet=self.wallet,
