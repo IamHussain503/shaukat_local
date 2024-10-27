@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Automatically update and restart the validator process when a new version is released.",
-        epilog="Example usage: python start_validator.py --pm2_name 'SN16Miner' --wallet_name 'wallet1' --wallet_hotkey 'key123'",
+        epilog="Example usage: python start_validator.py --pm2_name 'validator' --wallet_name 'wallet1' --wallet_hotkey 'key123'",
     )
 
     parser.add_argument(
