@@ -22,6 +22,7 @@ from datetime import timedelta
 from shlex import split
 from pathlib import Path
 from typing import List
+from ttm.aimodel import args
 
 log = logging.getLogger(__name__)
 UPDATES_CHECK_TIME = timedelta(minutes=5)
@@ -162,7 +163,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--pm2_name", default="SN16Valid", help="Name of the PM2 process."
+        "--pm2_name", default="miner", help="Name of the PM2 process."
     )
 
     flags, extra_args = parser.parse_known_args()

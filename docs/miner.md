@@ -38,13 +38,17 @@ sudo npm install pm2 -g
  - To operate a miner, run the miner.py script with the necessary configuration.
 
 ### Miner Commands
+**Start with Auto update**
 ```bash
-pm2 start neurons/miner.py -- \
-    --netuid 50 \
+python scripts/start_miner.py -- \
+    --pm2_name {name} \
+    --netuid 16 \
     --wallet.name {wallet_name} \
     --wallet.hotkey {hotkey_name} \
-    --logging.trace \
+    --logging.debug \
+    --model {tts-model} \
     --music_path {ttm-model} \
+    --clone_model {vc-model} \
     --axon.port {machine_port}
 ```
 

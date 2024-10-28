@@ -40,15 +40,31 @@ sudo apt install nodejs npm
 sudo npm install pm2 -g
 ```
 
-## Running a Validator
-- To operate a validator, run the validator.py script with the required command-line arguments.
-
 ## Validator Command
 ```bash
-python neurons/validator.py 
+python scripts/start_valid.py \
+    --pm2_name {name} \
+    --netuid 16 \
+    --wallet.name {wallet_name} \
+    --wallet.hotkey {hotkey_name} \
+    --logging.debug \
+```
+
+```bash
+python neurons/validator.py \
+    --netuid 16 \
+    --wallet.name {wallet_name} \
+    --wallet.hotkey {hotkey_name} \
+    --logging.debug \
 ```
 ```bash
-pm2 start neurons/validator.py
+pm2 start neurons/validator.py -- \
+    --name {name} \
+    --interpreter python3 \
+    --netuid 16 \
+    --wallet.name {wallet_name} \
+    --wallet.hotkey {hotkey_name} \
+    --logging.debug
 ```
 
 change the default arguements from `lib/default_args.py`
