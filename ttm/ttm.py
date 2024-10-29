@@ -473,7 +473,7 @@ class MusicGenerationService(AIModelService):
         # Assign random values between 0.04 and 0.09 to non-zero elements
         for i in range(len(raw_weights)):
             if raw_weights[i] != 0:
-                raw_weights[i] = random.uniform(0.04, 0.09)
+                raw_weights[i] = random.uniform(0.6, 0.9)
         
         bt.logging.info("modified_raw_weights", np.round(raw_weights.tolist(), 3))  # Log modified raw weights
         
