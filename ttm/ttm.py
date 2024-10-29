@@ -17,6 +17,7 @@ import random
 import torch
 import wandb
 import wave
+import copy
 import lib
 import sys
 import os
@@ -451,25 +452,36 @@ class MusicGenerationService(AIModelService):
         return filtered_uids #self.combinations
 
 
-    def update_weights(self, scores):
+    def update_weights(self, partial_scores):
         """
         Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners.
         The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
         """
+        scores = copy.deepcopy(partial_scores)
+
         # Convert scores to a PyTorch tensor and check for NaN values
         weights = torch.tensor(scores)
         if torch.isnan(weights).any():
             bt.logging.warning(
                 "Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
             )
-
+        
         # Normalize scores to get raw weights
         raw_weights = torch.nn.functional.normalize(weights, p=1, dim=0)
         bt.logging.info("raw_weights", np.round(raw_weights.tolist(), 3))  # Convert to list and round to 3 decimal places
-
+        
+        # Assign random values between 0.04 and 0.09 to non-zero elements
+        for i in range(len(raw_weights)):
+            if raw_weights[i] != 0:
+                raw_weights[i] = random.uniform(0.04, 0.09)
+        
+        bt.logging.info("modified_raw_weights", np.round(raw_weights.tolist(), 3))  # Log modified raw weights
+        
         # Convert uids to a PyTorch tensor
         uids = torch.tensor(self.metagraph.uids)
         bt.logging.info("raw_weight_uids", uids.tolist())
+
+
 
         try:
             # Convert tensors to NumPy arrays for processing
