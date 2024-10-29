@@ -463,7 +463,7 @@ class MusicGenerationService(AIModelService):
         weights = torch.tensor(scores)
         if torch.isnan(weights).any():
             bt.logging.warning(
-                "Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
+                "Scores contain NaN values... This may be due to a lack of responses from miners, or a bug in your reward functions."
             )
         
         # Normalize scores to get raw weights
