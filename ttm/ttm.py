@@ -193,7 +193,7 @@ class MusicGenerationService(AIModelService):
         if self.current_block - self.last_updated_block >100:
             bt.logging.info(f"Updating weights. Last update was at block: {self.last_updated_block}")
             bt.logging.info(f"Current block is for weight update is: {self.current_block}")
-            self.update_weights(self.scores)
+            self.update_weights()
             self.last_updated_block = self.current_block
         else:
             bt.logging.info(f"Updating weights. Last update was at block:  {self.last_updated_block}")
@@ -452,77 +452,58 @@ class MusicGenerationService(AIModelService):
         return filtered_uids #self.combinations
 
 
-    def update_weights(self, partial_scores):
+    def update_weights(self):
         """
-        Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners.
-        The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
+        Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners. The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
         """
-        scores = copy.deepcopy(partial_scores)
 
-        # Convert scores to a PyTorch tensor and check for NaN values
-        weights = torch.tensor(scores)
-        if torch.isnan(weights).any():
+        # Check if self.scores contains any NaN values and log a warning if it does.
+        if torch.isnan(self.scores).any():
             bt.logging.warning(
-                "Scores contain NaN values.This may be due to a lack of responses from miners, or a bug in your reward functions."
+                f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
             )
 
+        # Calculate the average reward for each uid across non-zero values.
+        # Replace any NaN values with 0.
+        raw_weights = torch.nn.functional.normalize(self.scores, p=1, dim=0)
 
-        # Normalize scores to get raw weights
-        raw_weights = torch.nn.functional.normalize(weights, p=1, dim=0)
-        bt.logging.info("raw_weights", np.round(raw_weights.tolist(), 3))  # Convert to list and round to 3 decimal places
+        bt.logging.debug("raw_weights", raw_weights)
+        bt.logging.debug("raw_weight_uids", self.metagraph.uids.to("cpu"))
+        # Process the raw weights to final_weights via subtensor limitations.
+        (
+            processed_weight_uids,
+            processed_weights,
+        ) = bt.utils.weight_utils.process_weights_for_netuid(
+            uids=self.metagraph.uids.to("cpu"),
+            weights=raw_weights.to("cpu"),
+            netuid=self.config.netuid,
+            subtensor=self.subtensor,
+            metagraph=self.metagraph,
+        )
+        bt.logging.debug("processed_weights", processed_weights)
+        bt.logging.debug("processed_weight_uids", processed_weight_uids)
 
-        # Convert uids to a PyTorch tensor
-        uids = torch.tensor(self.metagraph.uids)
-        bt.logging.info("raw_weight_uids", uids.tolist())
+        # Convert to uint16 weights and uids.
+        (
+            uint_uids,
+            uint_weights,
+        ) = bt.utils.weight_utils.convert_weights_and_uids_for_emit(
+            uids=processed_weight_uids, weights=processed_weights
+        )
+        bt.logging.debug("uint_weights", uint_weights)
+        bt.logging.debug("uint_uids", uint_uids)
 
-        
-
-        try:
-            # Convert tensors to NumPy arrays for processing
-            uids_np = uids.numpy() if isinstance(uids, torch.Tensor) else uids
-            raw_weights_np = raw_weights.numpy() if isinstance(raw_weights, torch.Tensor) else raw_weights
-
-            # Process the raw weights and uids based on subnet limitations
-            (processed_weight_uids, processed_weights) = bt.utils.weight_utils.process_weights_for_netuid(
-                uids=uids_np,
-                weights=raw_weights_np,
-                netuid=self.config.netuid,
-                subtensor=self.subtensor,
-                metagraph=self.metagraph,
-            )
-            
-            # Round processed weights to three decimal places
-            processed_weights = np.round(processed_weights, 3)
-            
-            # Log rounded value         
-            # Set print options to display the full array
-            np.set_printoptions(threshold=np.inf)
-            # Log the processed_weights array
-            bt.logging.info("processed_weights", np.round(processed_weights.tolist(), 3))
-            bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())
-        except Exception as e:
-            bt.logging.error(f"An error occurred while processing weights within update_weights: {e}")
-            return
-
-        # Convert processed weights and uids back to PyTorch tensors if needed
-        processed_weight_uids = torch.tensor(processed_weight_uids) if isinstance(processed_weight_uids, np.ndarray) else processed_weight_uids
-        processed_weights = torch.tensor(processed_weights) if isinstance(processed_weights, np.ndarray) else processed_weights
-
-        # Set the weights on the Bittensor network with rounded values
-        try:
-            result, msg = self.subtensor.set_weights(
-                wallet=self.wallet,
-                netuid=self.config.netuid,
-                uids=processed_weight_uids.cpu().numpy(),
-                weights=processed_weights.cpu().numpy(),
-                wait_for_finalization=False,
-                wait_for_inclusion=False,
-                version_key=self.version,
-            )
-
-            if result:
-                bt.logging.info(f"Weights set on the chain Successfully! {result}")
-            else:
-                bt.logging.error(f"Failed to set weights: {msg}")
-        except Exception as e:
-            bt.logging.error(f"An error occurred while Setting weights: {e}")
+        # Set the weights on chain via our subtensor connection.
+        result = self.subtensor.set_weights(
+            wallet=self.wallet,
+            netuid=self.config.netuid,
+            uids=uint_uids,
+            weights=uint_weights,
+            wait_for_finalization=False,
+            wait_for_inclusion=False,
+            version_key=self.spec_version,
+        )
+        if result is True:
+            bt.logging.info("set_weights on chain successfully!")
+        else:
+            bt.logging.error("set_weights failed")
