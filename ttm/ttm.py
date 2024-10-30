@@ -463,7 +463,7 @@ class MusicGenerationService(AIModelService):
         weights = torch.tensor(scores)
         if torch.isnan(weights).any():
             bt.logging.warning(
-                "Scores contain NaN values... This may be due to a lack of responses from miners, or a bug in your reward functions."
+                "Scores contain NaN values.This may be due to a lack of responses from miners, or a bug in your reward functions."
             )
 
 
@@ -494,9 +494,12 @@ class MusicGenerationService(AIModelService):
             # Round processed weights to three decimal places
             processed_weights = np.round(processed_weights, 3)
             
-            # Log rounded values
-            bt.logging.info("processed_weights++++++++++++++", np.round(processed_weights.tolist(), 3))
-            bt.logging.info("processed_weight_uids+++++++++++++++++++++++++", processed_weight_uids.tolist())
+            # Log rounded value         
+            # Set print options to display the full array
+            np.set_printoptions(threshold=np.inf)
+            # Log the processed_weights array
+            bt.logging.info("processed_weights", np.round(processed_weights.tolist(), 3))
+            bt.logging.info("processed_weight_uids", processed_weight_uids.tolist())
         except Exception as e:
             bt.logging.error(f"An error occurred while processing weights within update_weights: {e}")
             return
