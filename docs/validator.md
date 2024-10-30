@@ -42,31 +42,13 @@ sudo npm install pm2 -g
 
 ## Validator Command
 ```bash
-python scripts/start_valid.py \
-    --pm2_name {name} \
-    --netuid 16 \
-    --wallet.name {wallet_name} \
-    --wallet.hotkey {hotkey_name} \
-    --logging.debug \
+apt install screen
+screen -S yourscreen
+conda activate yourenv
+python scripts/start_valid.py
 ```
 
-```bash
-python neurons/validator.py \
-    --netuid 16 \
-    --wallet.name {wallet_name} \
-    --wallet.hotkey {hotkey_name} \
-    --logging.debug \
-```
-```bash
-pm2 start neurons/validator.py -- \
-    --name {name} \
-    --interpreter python3 \
-    --netuid 16 \
-    --wallet.name {wallet_name} \
-    --wallet.hotkey {hotkey_name} \
-    --logging.debug
-```
-
+### Important to to change your default arguments in the file below
 change the default arguements from `lib/default_args.py`
 
 ### Bittensor Validator Script Arguments:
