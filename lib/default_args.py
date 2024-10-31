@@ -4,5 +4,5 @@ default_args = {
     'netuid': 50,
     'wallet_name': 'cold',
     'wallet_hotkey': 'hot',
-    'process_name': 'validator',
+    'process_name': 'validators',
 }
