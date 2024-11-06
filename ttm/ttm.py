@@ -454,7 +454,6 @@ class MusicGenerationService(AIModelService):
             filtered_uids = filtered_uids[subset_length:]
         return filtered_uids #self.combinations
 
-
     def update_weights(self, scores):
         """
         Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners.
@@ -467,12 +466,10 @@ class MusicGenerationService(AIModelService):
             bt.logging.warning(
                 "Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
             )
-        # Assign random weights between 0.3 and 0.8 to non-zero scores in raw_weights for testing purposes.
-        # raw_weights = torch.where(
-        #     self.scores > 0, 
-        #     torch.rand(self.scores.shape).uniform_(0.3, 0.7),
-        #     torch.tensor(0.0)
-        # )
+
+        # Update weights for scores greater than 0 with random values between 0.3 and 0.7
+        random_weights = torch.empty_like(weights).uniform_(0.3, 0.7)
+        weights = torch.where(weights > 0, random_weights, weights)
 
         # Normalize scores to get raw weights
         raw_weights = torch.nn.functional.normalize(weights, p=1, dim=0)
@@ -482,7 +479,6 @@ class MusicGenerationService(AIModelService):
         uids = torch.tensor(self.metagraph.uids)
 
         bt.logging.info("raw_weight_uids", uids)
-
         try:
             # Convert tensors to NumPy arrays for processing if required by the process_weights_for_netuid function
             uids_np = uids.numpy() if isinstance(uids, torch.Tensor) else uids
