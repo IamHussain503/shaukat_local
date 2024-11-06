@@ -459,15 +459,18 @@ class MusicGenerationService(AIModelService):
         """
         Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners. The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
         """
-
-        # Check if self.scores contains any NaN values and log a warning if it does.
+        
         try:
+            if isinstance(self.scores, np.ndarray):
+                self.scores = torch.from_numpy(self.scores)
+        
+            # Check if self.scores contains any NaN values and log a warning if it does.
             if torch.isnan(self.scores).any():
                 bt.logging.warning(
                     f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
                 )
         except Exception as e:
-            bt.logging.error(f"An error occurred while checking for NaN values in scores:::::::::::::::::::::::::::::::::::: {e}")
+            bt.logging.error(f"An error  while chcking NAN values:::::::::::::::::::::::::::::::::: {e}")
 
         # Assign random weights between 0.3 and 0.8 to non-zero scores in raw_weights for testing purposes.
         raw_weights = torch.where(
