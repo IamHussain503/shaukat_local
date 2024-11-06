@@ -455,10 +455,10 @@ class MusicGenerationService(AIModelService):
         return filtered_uids #self.combinations
 
 
-    def update_weights(self, scores):
+    def update_weights(self):
 
         # Normalize scores to get weights
-        weights = torch.nn.functional.normalize(scores, p=1, dim=0)
+        weights = torch.nn.functional.normalize(self.scores, p=1, dim=0)
         bt.logging.info(f"Setting weights: {weights}")
 
         # Process weights for the subnet
