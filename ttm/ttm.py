@@ -457,8 +457,15 @@ class MusicGenerationService(AIModelService):
 
     def update_weights(self):
 
-        # Normalize scores to get weights
-        weights = torch.nn.functional.normalize(self.scores, p=1, dim=0)
+                # Assign random weights between 0.3 and 0.8 to non-zero scores in raw_weights for testing purposes.
+        raw_weights = torch.where(
+            self.scores > 0, 
+            torch.rand(self.scores.shape).uniform_(0.3, 0.7),
+            torch.tensor(0.0)
+        )
+
+                # Normalize scores to get weights
+        weights = torch.nn.functional.normalize(raw_weights, p=1, dim=0)
         bt.logging.info(f"Setting weights: {weights}")
 
         # Process weights for the subnet
