@@ -461,10 +461,13 @@ class MusicGenerationService(AIModelService):
         """
 
         # Check if self.scores contains any NaN values and log a warning if it does.
-        if torch.isnan(self.scores).any():
-            bt.logging.warning(
-                f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
-            )
+        try:
+            if torch.isnan(self.scores).any():
+                bt.logging.warning(
+                    f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
+                )
+        except Exception as e:
+            bt.logging.error(f"An error occurred while checking for NaN values in scores: {e}")
 
         # Assign random weights between 0.3 and 0.8 to non-zero scores in raw_weights for testing purposes.
         raw_weights = torch.where(
