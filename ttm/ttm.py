@@ -204,8 +204,11 @@ class MusicGenerationService(AIModelService):
     def process_responses(self, filtered_axons, responses, prompt):
         """Processes responses received from the network."""
         for axon, response in zip(filtered_axons, responses):
-            if response is not None and isinstance(response, MusicGeneration):
-                self.process_response(axon, response, prompt)
+            try:
+                if response is not None and isinstance(response, MusicGeneration):
+                    self.process_response(axon, response, prompt)
+            except Exception as e:
+                bt.logging.error(f"Getting an error while Checking MusicGen Instance: {e}")
         
         bt.logging.info(f"Scores after update in TTM: {self.scores}")
         self.update_block()
