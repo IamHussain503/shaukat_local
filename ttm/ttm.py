@@ -498,7 +498,7 @@ class MusicGenerationService(AIModelService):
                 metagraph=self.metagraph,
             )
         except Exception as e:
-            bt.logging.error(f"An error occurred while processing weights: {e}")
+            bt.logging.error(f"An error occurred while processing weights>>>>>>>> {e}")
         bt.logging.debug("processed_weights", processed_weights)
         bt.logging.debug("processed_weight_uids", processed_weight_uids)
 
@@ -511,7 +511,7 @@ class MusicGenerationService(AIModelService):
                 uids=processed_weight_uids, weights=processed_weights
             )
         except Exception as e:
-            bt.logging.error(f"An error occurred while converting weights and uids for emit: {e}")
+            bt.logging.error(f"An error occurred while converting weights and uids for emit>>>>>>>>>>>>>> {e}")
 
         bt.logging.debug("uint_weights", uint_weights)
         bt.logging.debug("uint_uids", uint_uids)
@@ -532,4 +532,4 @@ class MusicGenerationService(AIModelService):
             else:
                 bt.logging.error("set_weights failed")
         except Exception as e:
-            bt.logging.error(f"An error occurred while setting weights: {e}")
+            bt.logging.error(f"An error occurred while setting weights>>>>>>>>>>>>>> {e}")
