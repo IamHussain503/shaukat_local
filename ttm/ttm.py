@@ -455,81 +455,39 @@ class MusicGenerationService(AIModelService):
         return filtered_uids #self.combinations
 
 
-    def update_weights(self):
-        """
-        Sets the validator weights to the metagraph hotkeys based on the scores it has received from the miners. The weights determine the trust and incentive level the validator assigns to miner nodes on the network.
-        """
-        
-        try:
-            if isinstance(self.scores, np.ndarray):
-                self.scores = torch.from_numpy(self.scores)
-        
-            # Check if self.scores contains any NaN values and log a warning if it does.
-            if torch.isnan(self.scores).any():
-                bt.logging.warning(
-                    f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
+    def update_weights(self, scores):
+
+            # Normalize scores to get weights
+            weights = torch.nn.functional.normalize(scores, p=1, dim=0)
+            bt.logging.info(f"Setting weights: {weights}")
+
+            # Process weights for the subnet
+            try:
+                processed_uids, processed_weights = bt.utils.weight_utils.process_weights_for_netuid(
+                    uids=self.metagraph.uids,
+                    weights=weights,
+                    netuid=self.config.netuid,
+                    subtensor=self.subtensor
                 )
-        except Exception as e:
-            bt.logging.error(f"An error  while chcking NAN values:::::::::::::::::::::::::::::::::: {e}")
+                bt.logging.info(f"Processed weights: {processed_weights}")
+                bt.logging.info(f"Processed uids: {processed_uids}")
+            except Exception as e:
+                bt.logging.error(f"An error occurred While processing the weights: {e}")
 
-        # Assign random weights between 0.3 and 0.8 to non-zero scores in raw_weights for testing purposes.
-        raw_weights = torch.where(
-            self.scores > 0, 
-            torch.rand(self.scores.shape).uniform_(0.3, 0.8),
-            torch.tensor(0.0)
-        )
+            try:
+                # Set weights on the Bittensor network
+                result = self.subtensor.set_weights(
+                    netuid=self.config.netuid,  # Subnet to set weights on
+                    wallet=self.wallet,         # Wallet to sign set weights using hotkey
+                    uids=processed_uids,        # Uids of the miners to set weights for
+                    weights=processed_weights, # Weights to set for the miners
+                    wait_for_finalization=True,
+                    version_key=self.version,
+                )
 
-        # Calculate the average reward for each uid across non-zero values.
-        # Replace any NaN values with 0.
-        raw_weights = torch.nn.functional.normalize(self.scores, p=1, dim=0)
-
-        bt.logging.debug("raw_weights", raw_weights)
-        bt.logging.debug("raw_weight_uids", self.metagraph.uids)
-        # Process the raw weights to final_weights via subtensor limitations.
-        try:
-            (
-                processed_weight_uids,
-                processed_weights,
-            ) = bt.utils.weight_utils.process_weights_for_netuid(
-                uids=self.metagraph.uids.to("cpu"),
-                weights=raw_weights.to("cpu"),
-                netuid=self.config.netuid,
-                subtensor=self.subtensor,
-                metagraph=self.metagraph,
-            )
-        except Exception as e:
-            bt.logging.error(f"An error occurred while processing weights>>>>>>>> {e}")
-        bt.logging.debug("processed_weights", processed_weights)
-        bt.logging.debug("processed_weight_uids", processed_weight_uids)
-
-        # Convert to uint16 weights and uids.
-        try:
-            (
-                uint_uids,
-                uint_weights,
-            ) = bt.utils.weight_utils.convert_weights_and_uids_for_emit(
-                uids=processed_weight_uids, weights=processed_weights
-            )
-        except Exception as e:
-            bt.logging.error(f"An error occurred while converting weights and uids for emit>>>>>>>>>>>>>> {e}")
-
-        bt.logging.debug("uint_weights", uint_weights)
-        bt.logging.debug("uint_uids", uint_uids)
-
-        # Set the weights on chain via our subtensor connection.
-        try:
-            result = self.subtensor.set_weights(
-                wallet=self.wallet,
-                netuid=self.config.netuid,
-                uids=uint_uids,
-                weights=uint_weights,
-                wait_for_finalization=False,
-                wait_for_inclusion=False,
-                version_key=self.spec_version,
-            )
-            if result is True:
-                bt.logging.info("set_weights on chain successfully!")
-            else:
-                bt.logging.error("set_weights failed")
-        except Exception as e:
-            bt.logging.error(f"An error occurred while setting weights>>>>>>>>>>>>>> {e}")
+                if result:
+                    bt.logging.success(f'Successfully set weights. result: {result}')
+                else:
+                    bt.logging.error('Failed to set weights.')
+            except Exception as e:
+                bt.logging.error(f"An error occurred while setting weights: {e}")
