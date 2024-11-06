@@ -193,7 +193,7 @@ class MusicGenerationService(AIModelService):
         if self.current_block - self.last_updated_block > 50:
             bt.logging.info(f"Updating weights. Last update was at block: {self.last_updated_block}")
             bt.logging.info(f"Current block is for weight update is: {self.current_block}")
-            self.update_weights()
+            self.update_weights(self.scores)
             self.last_updated_block = self.current_block
         else:
             bt.logging.info(f"Updating weights. Last update was at block:  {self.last_updated_block}")
