@@ -1,8 +1,8 @@
 # default_args.py
 default_args = {
-    'subtensor_network': 'test',
-    'netuid': 31,
-    'wallet_name': 'valid',
+    'subtensor_network': 'finney',
+    'netuid': 50,
+    'wallet_name': 'cold',
     'wallet_hotkey': 'hot',
     'process_name': 'validators',
 }
