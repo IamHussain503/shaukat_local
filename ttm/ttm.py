@@ -158,7 +158,7 @@ class MusicGenerationService(AIModelService):
             try:
                 self.process_responses(filtered_axons, responses, g_prompt)
             except Exception as e:
-                bt.logging.error(f"getting an error in processing response: {e}")
+                bt.logging.error(f"getting an error in processing response::::::::::::::::::::::::::::::::::::: {e}")
 
             if self.last_reset_weights_block + 50 < self.current_block:
                 bt.logging.info(f"Resetting weights for validators and nodes without IPs")
@@ -467,7 +467,7 @@ class MusicGenerationService(AIModelService):
                     f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
                 )
         except Exception as e:
-            bt.logging.error(f"An error occurred while checking for NaN values in scores: {e}")
+            bt.logging.error(f"An error occurred while checking for NaN values in scores:::::::::::::::::::::::::::::::::::: {e}")
 
         # Assign random weights between 0.3 and 0.8 to non-zero scores in raw_weights for testing purposes.
         raw_weights = torch.where(
